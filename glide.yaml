@@ -1,0 +1,13 @@
+package: github.com/yiitz/iceapple
+import:
+- package: go.uber.org/zap
+  version: ~1.8.0
+  subpackages:
+  - zapcore
+- package: github.com/gizak/termui
+  version: ~2.2.0
+- package: github.com/nsf/termbox-go
+- package: github.com/maruel/panicparse
+  version: ~1.1.1
+  subpackages:
+  - stack
