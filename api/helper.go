@@ -13,7 +13,7 @@ var logger = log.NewLogger("api")
 
 func init() {
 	jar, err := cookiejar.New(&cookiejar.Options{Filename: storage.AppDir() + "/.cookie"})
-	if err == nil {
+	if err != nil {
 		panic(err)
 	}
 	client.Jar = jar
