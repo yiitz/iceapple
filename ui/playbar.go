@@ -39,7 +39,7 @@ func NewPlayBar(app *tview.Application, progress *tview.TextView, status *tview.
 func (pb *PlayBar) Draw(force bool) {
 	state := pb.player.GetState()
 
-	if state == media.GstStatePlaying || force {
+	if state == media.GstStatePlaying || force || pb.job != nil{
 		_, _, w, _ := pb.progress.GetInnerRect()
 		w -= 3
 
