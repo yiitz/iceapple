@@ -3,8 +3,8 @@ package log
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"time"
 	"os/user"
+	"time"
 )
 
 var LoggerRoot *zap.SugaredLogger
@@ -47,7 +47,10 @@ func init() {
 	LoggerRoot = parent.Named("[root]")
 }
 
-
 func NewLogger(name string) *zap.SugaredLogger {
 	return parent.Named(name)
+}
+
+func Flush() {
+	parent.Sync()
 }
