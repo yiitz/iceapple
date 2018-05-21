@@ -13,7 +13,7 @@ func init() {
 	}
 	appDir = usr.HomeDir + "/.iceapple"
 	if _, err := os.Stat(appDir); os.IsNotExist(err) {
-		if err = os.Mkdir(appDir, 0600); err != nil {
+		if err = os.Mkdir(appDir, 0700); err != nil {
 			panic(err)
 		}
 	}

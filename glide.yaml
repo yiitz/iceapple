@@ -11,3 +11,6 @@ import:
   version: ~0.7.4
 - package: github.com/HuKeping/rbtree
 - package: github.com/yiitz/persistent-cookiejar
+- package: github.com/juju/go4
+  subpackages:
+  - lock
