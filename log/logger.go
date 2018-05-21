@@ -3,25 +3,20 @@ package log
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os/user"
 	"time"
+	"github.com/yiitz/iceapple/storage"
 )
 
 var LoggerRoot *zap.SugaredLogger
 var parent *zap.SugaredLogger
 
 func init() {
-	usr, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
 	cfg := zap.Config{
 		Level:             zap.NewAtomicLevelAt(zap.DebugLevel),
 		Development:       true,
 		DisableStacktrace: false,
 		Encoding:          "console",
-		OutputPaths:       []string{usr.HomeDir + "/iceapple.log"},
-		ErrorOutputPaths:  []string{usr.HomeDir + "/iceapple_err.log"},
+		OutputPaths:       []string{storage.AppDir() + "/std.log"},
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:    "message",
 			TimeKey:       "time",
@@ -44,11 +39,11 @@ func init() {
 		panic(err)
 	}
 	parent = l.Sugar()
-	LoggerRoot = parent.Named("[root]")
+	LoggerRoot = NewLogger("root")
 }
 
 func NewLogger(name string) *zap.SugaredLogger {
-	return parent.Named(name)
+	return parent.Named("[" + name + "]")
 }
 
 func Flush() {

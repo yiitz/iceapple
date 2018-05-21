@@ -184,7 +184,7 @@ static void player_seek(CustomData *data, gint64 pos)
 */
 import "C"
 
-var logger = log.NewLogger("[media]")
+var logger = log.NewLogger("media")
 
 //export gst_log_error
 func gst_log_error(message *C.char) {
