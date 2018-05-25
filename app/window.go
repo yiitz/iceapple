@@ -3,15 +3,21 @@ package app
 import (
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
-	"github.com/yiitz/iceapple/entity"
 	"github.com/yiitz/iceapple/log"
 	"github.com/yiitz/iceapple/media"
 	"github.com/yiitz/iceapple/ui"
 )
 
+var player *media.Player
+var pl *ui.PlayList
+var pb *ui.PlayBar
+
+var playNextFunc func()
+var playPreviousFunc func()
+
 func Run() {
 
-	player := media.NewPlayer()
+	player = media.NewPlayer()
 
 	//ui
 	app := tview.NewApplication()
@@ -21,16 +27,14 @@ func Run() {
 	mainContent := tview.NewPages()
 
 	list := tview.NewList().ShowSecondaryText(false)
-	pl := ui.NewPlayList(app, list, player)
-	pl.SetItems([]ui.PlayListItem{&entity.Song{Name: "后会无期", Uri: "file:///home/yiitz/Downloads/hhwq.mp3"},
-		&entity.Song{Name: "example", Uri: "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm"}})
+	pl = ui.NewPlayList(app, list, player)
 	mainContent.AddPage("main", list, true, true)
 
 	flex.AddItem(mainContent, 0, 1, true)
 
 	progress := tview.NewTextView()
 	status := tview.NewTextView()
-	pb := ui.NewPlayBar(app, progress, status, player)
+	pb = ui.NewPlayBar(app, progress, status, player)
 	flex.AddItem(progress, 1, 0, false)
 	flex.AddItem(status, 1, 0, false)
 
@@ -58,10 +62,26 @@ func Run() {
 					pb.Draw(true)
 					return nil
 				}
+			case tcell.KeyRight:
+				if event.Modifiers()&tcell.ModCtrl != 0 {
+					if playNextFunc != nil {
+						playNextFunc()
+						return nil
+					}
+				}
+			case tcell.KeyLeft:
+				if event.Modifiers()&tcell.ModCtrl != 0 {
+					if playPreviousFunc != nil {
+						playPreviousFunc()
+						return nil
+					}
+				}
 			}
 		}
 		return event
 	})
+
+	enterPersonalFM()
 
 	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)

@@ -1,8 +1,10 @@
 # iceapple
-
-## Installation
+网易云音乐私人FM命令行版本
+## 环境要求
++ glide
++ libgstreamer1.0
+## 安装
 ```
-apt install libgstreamer1.0-dev gstreamer1.0-libav
 go get github.com/yiitz/iceapple
 cd $GOPATH/src/github.com/yiitz/iceapple
 glide install

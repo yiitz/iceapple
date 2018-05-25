@@ -9,14 +9,16 @@ import (
 	"math"
 	"strings"
 	"time"
+	"github.com/yiitz/iceapple/log"
 )
 
 type PlayBar struct {
-	progress *tview.TextView
-	status   *tview.TextView
-	app      *tview.Application
-	player   *media.Player
-	job      clock.Job
+	progress       *tview.TextView
+	status         *tview.TextView
+	app            *tview.Application
+	player         *media.Player
+	job            clock.Job
+	OnSongFinished func()
 }
 
 func NewPlayBar(app *tview.Application, progress *tview.TextView, status *tview.TextView, player *media.Player) *PlayBar {
@@ -38,23 +40,27 @@ func NewPlayBar(app *tview.Application, progress *tview.TextView, status *tview.
 
 func (pb *PlayBar) Draw(force bool) {
 	state := pb.player.GetState()
+	log.LoggerRoot.Debugf("player state: %d",state)
 
-	if state == media.GstStatePlaying || force || pb.job != nil{
+	if state == media.GstStatePlaying || force || pb.job != nil {
 		_, _, w, _ := pb.progress.GetInnerRect()
 		w -= 3
 
 		position, duration := pb.player.GetProgress()
 		progress := int(float64(position) / float64(duration) * float64(w))
 
-		if state != media.GstStatePlaying && state != media.GstStatePaused {
+		if state == media.GstStateNull {
 			pb.CancelTimer()
 			pb.progress.SetText("[" + strings.Repeat("-", w+1) + "]")
+			if pb.OnSongFinished != nil {
+				pb.OnSongFinished()
+			}
 		} else {
 			pb.progress.SetText(strings.Repeat("=", progress) + ">" + strings.Repeat("-", w-progress))
 		}
 
 		pb.status.SetText(
-			fmt.Sprintf("[time %d:%d:%d/%d:%d:%d]\t[volume %d%%]",
+			fmt.Sprintf("[time %02d:%02d:%02d/%02d:%02d:%02d]\t[volume %d%%]",
 				int(position.Hours()), int(position.Minutes())%60, int(position.Seconds())%60,
 				int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60, pb.player.GetVolume()))
 

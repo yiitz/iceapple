@@ -14,3 +14,9 @@ import:
 - package: github.com/juju/go4
   subpackages:
   - lock
+- package: golang.org/x/crypto
+  subpackages:
+  - ssh
+- package: golang.org/x/sys
+  subpackages:
+  - unix

@@ -1,22 +1,31 @@
 package log
 
 import (
+	"github.com/yiitz/iceapple/storage"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"time"
-	"github.com/yiitz/iceapple/storage"
+	"flag"
+	"github.com/yiitz/iceapple/config"
 )
 
 var LoggerRoot *zap.SugaredLogger
 var parent *zap.SugaredLogger
 
+var logLevel zap.AtomicLevel
+
 func init() {
+	outputPath := []string{storage.AppDir() + "/std.log"}
+	if flag.Lookup("test.v") != nil {
+		outputPath = append(outputPath, "stdout")
+	}
+	logLevel.UnmarshalText([]byte("debug"))
 	cfg := zap.Config{
-		Level:             zap.NewAtomicLevelAt(zap.DebugLevel),
+		Level:             logLevel,
 		Development:       true,
 		DisableStacktrace: false,
 		Encoding:          "console",
-		OutputPaths:       []string{storage.AppDir() + "/std.log"},
+		OutputPaths:       outputPath,
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:    "message",
 			TimeKey:       "time",
@@ -25,7 +34,7 @@ func init() {
 			LevelKey:      "level",
 			EncodeCaller:  zapcore.ShortCallerEncoder,
 			EncodeName:    zapcore.FullNameEncoder,
-			EncodeLevel:   zapcore.CapitalLevelEncoder,
+			EncodeLevel:   zapcore.LowercaseLevelEncoder,
 			StacktraceKey: "stacktrace",
 		},
 	}
@@ -40,6 +49,10 @@ func init() {
 	}
 	parent = l.Sugar()
 	LoggerRoot = NewLogger("root")
+}
+
+func SetLevel(level string) {
+	logLevel.UnmarshalText([]byte(config.LogLevel))
 }
 
 func NewLogger(name string) *zap.SugaredLogger {

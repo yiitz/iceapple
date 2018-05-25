@@ -1,11 +1,12 @@
 package storage
 
 import (
-	"os/user"
 	"os"
+	"os/user"
 )
 
 var appDir string
+
 func init() {
 	usr, err := user.Current()
 	if err != nil {

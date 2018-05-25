@@ -6,22 +6,29 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe"
+	"github.com/yiitz/iceapple/config"
+	"net/url"
+	"fmt"
 )
 
 /*
 //https://gstreamer.freedesktop.org/documentation/tutorials/playback/progressive-streaming.html
 #cgo pkg-config: gstreamer-1.0
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <gst/gst.h>
 
 extern void gst_log_error(char *);
 extern void gst_log_debug(char *);
-extern void player_refresh_ui(gint p0, gint64 p1, gint64 p2);
 
 static char msgbuf[256];
 
 static GMainLoop *loop;
+
+static gchar *proxy_url = NULL;
+static gchar *proxy_user_name = NULL;
+static gchar *proxy_user_password = NULL;
 
 typedef struct _CustomData {
 	GstElement *pipeline;
@@ -30,13 +37,18 @@ typedef struct _CustomData {
 	gboolean is_live;
 } CustomData;
 
-//非线程安全
-static void log_call(void (*func)(char *) ,const char* fmt,...){
-	va_list argptr;
-	va_start(argptr,fmt);
-	snprintf(msgbuf, sizeof(msgbuf), fmt, argptr);
-	va_end(argptr);
-	func(msgbuf);
+static void set_proxy_url(gchar *val){
+	proxy_url = val;
+	snprintf(msgbuf, sizeof(msgbuf), "set proxy for gstreamer: %s", val);
+	gst_log_debug(msgbuf);
+}
+
+static void set_proxy_user_name(gchar *val){
+	proxy_user_name = val;
+}
+
+static void set_proxy_user_password(gchar *val){
+	proxy_user_password = val;
 }
 
 static gboolean bus_callback(GstBus *bus, GstMessage *msg, CustomData *data){
@@ -46,20 +58,21 @@ static gboolean bus_callback(GstBus *bus, GstMessage *msg, CustomData *data){
   	switch (GST_MESSAGE_TYPE (msg)) {
 		case GST_MESSAGE_ERROR:
 			gst_message_parse_error (msg, &err, &debug);
-			snprintf (msgbuf, sizeof(msgbuf), "bus callback error: %s", err->message);
-			gst_log_debug (msgbuf);
+			snprintf(msgbuf, sizeof(msgbuf), "GST_MESSAGE_ERROR: %s", err->message);
+			gst_log_error(msgbuf);
 			g_error_free (err);
 			g_free (debug);
-			gst_element_set_state (data->pipeline, GST_STATE_READY);
+			gst_element_set_state (data->pipeline, GST_STATE_NULL);
 			break;
 		case GST_MESSAGE_EOS:
-			gst_element_set_state (data->pipeline, GST_STATE_READY);
+			gst_element_set_state (data->pipeline, GST_STATE_NULL);
 			break;
 		case GST_MESSAGE_BUFFERING:
 			if (data->is_live) break;
 
 			gst_message_parse_buffering (msg, &data->buffering_level);
-
+			snprintf(msgbuf, sizeof(msgbuf), "GST_MESSAGE_BUFFERING: %d",data->buffering_level);
+			gst_log_debug(msgbuf);
 			if (data->buffering_level < 100)
 				gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 			else
@@ -71,18 +84,44 @@ static gboolean bus_callback(GstBus *bus, GstMessage *msg, CustomData *data){
 			break;
 		case GST_MESSAGE_STREAM_STATUS:
 			gst_message_parse_stream_status(msg, &stream_status, NULL);
-			log_call(gst_log_debug,"stream status changed: %d",stream_status);
+			snprintf(msgbuf, sizeof(msgbuf), "GST_MESSAGE_STREAM_STATUS: %d",stream_status);
+			gst_log_debug(msgbuf);
 			break;
 	}
 }
 
 static void got_location(GstObject *gstobject, GstObject *prop_object, GParamSpec *prop, gpointer data) {
 	gchar *location;
-	g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
+	g_object_get (prop_object, "temp-location", &location, NULL);
 	snprintf(msgbuf, sizeof(msgbuf), "temporary file: %s", location);
-	gst_log_debug (msgbuf);
+	gst_log_debug(msgbuf);
 	g_free (location);
 	//g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL);
+}
+
+static void cb_playbin_notify_source(GObject *obj, GParamSpec *param, gpointer u_data)
+{
+	GObject *source_element;
+	gchar *objname = GST_OBJECT_NAME(obj);
+	snprintf(msgbuf, sizeof(msgbuf), "objname is %s", objname);
+	gst_log_debug(msgbuf);
+	if (g_object_class_find_property(G_OBJECT_GET_CLASS(obj), "source")) {
+		g_object_get(obj, "source", &source_element, NULL);
+		if (g_object_class_find_property(G_OBJECT_GET_CLASS(source_element), "proxy")) {
+			g_object_set(source_element, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36", NULL);
+
+			if(NULL != proxy_url){
+				g_object_set(source_element, "proxy", proxy_url,NULL);
+				if(NULL != proxy_user_name){
+					g_object_set(source_element, "proxy-id","yiitz",NULL);
+				}
+				if(NULL != proxy_user_password){
+					g_object_set(source_element, "proxy-pw","yiitz",NULL);
+				}
+			}
+		}
+		g_object_unref(source_element);
+	}
 }
 
 static void loop_init(){
@@ -95,6 +134,15 @@ static void loop_run(){
 }
 
 static void loop_destroy_and_quit(){
+	if(NULL != proxy_url){
+		g_free(proxy_url);
+	}
+	if(NULL != proxy_user_name){
+		g_free(proxy_user_name);
+	}
+	if(NULL != proxy_user_password){
+		g_free(proxy_user_password);
+	}
 	g_main_loop_quit(loop);
 	g_main_loop_unref(loop);
 }
@@ -121,6 +169,7 @@ static CustomData* player_new(gint id){
   	gst_object_unref(bus);
 
   	g_signal_connect (data->pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
+  	g_signal_connect(data->pipeline, "notify::source", G_CALLBACK(cb_playbin_notify_source), NULL);
 
 	return data;
 }
@@ -133,14 +182,15 @@ static void player_destroy(CustomData *data){
 
 static void player_play(CustomData *data, gchar *path){
 	GstStateChangeReturn ret;
+
 	gst_element_set_state (data->pipeline, GST_STATE_NULL);
 	g_object_set(G_OBJECT(data->pipeline), "uri", path, NULL);
 	gst_element_set_state (data->pipeline, GST_STATE_READY);
+
 	ret = gst_element_set_state(data->pipeline, GST_STATE_PLAYING);
 	data->is_live = FALSE;
 	if (ret == GST_STATE_CHANGE_FAILURE) {
-		log_call(gst_log_error, "unable to set the pipeline to the playing state.");
-		gst_object_unref (data->pipeline);
+		gst_log_error("unable to set the pipeline to the playing state.");
 	} else if (ret == GST_STATE_CHANGE_NO_PREROLL) {
 		data->is_live = TRUE;
 	}
@@ -205,6 +255,8 @@ type Player struct {
 	OnPlayStart func()
 }
 
+const GstStateNull = 1
+const GstStateReady = 2
 const GstStatePaused = 3
 const GstStatePlaying = 4
 
@@ -307,6 +359,22 @@ func (p *Player) Stop() {
 
 func Init() {
 	C.loop_init()
+
+	if len(config.Proxy) > 0 {
+		u, err := url.Parse(config.Proxy)
+		if err != nil {
+			panic(err)
+		}
+		C.set_proxy_url(gString(fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, u.Path)))
+		if u.User != nil {
+			C.set_proxy_user_name(gString(u.User.Username()))
+			p, has := u.User.Password()
+			if has {
+				C.set_proxy_user_password(gString(p))
+			}
+		}
+	}
+
 	go func() {
 		C.loop_run()
 	}()
