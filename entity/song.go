@@ -1,6 +1,9 @@
 package entity
 
+import "github.com/yiitz/iceapple/api"
+
 type Song struct {
+	Id     int
 	Name   string
 	Artist string
 	Uri    string
@@ -12,7 +15,7 @@ func (s *Song) GetName() string {
 }
 
 func (s *Song) GetUri() string {
-	return s.Uri
+	return api.SongGetUrl(s.Id)
 }
 
 func (s *Song) GetArtist() string {

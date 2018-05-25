@@ -56,7 +56,7 @@ func queryNext() {
 		}
 		s.Artist = strings.Join(as, ",")
 		s.Album = (v["album"].(map[string]interface{}))["name"].(string)
-		s.Uri = api.SongGetUrl(int(v["id"].(float64)))
+		s.Id = int(v["id"].(float64))
 		songs = append(songs, s)
 	}
 	return
