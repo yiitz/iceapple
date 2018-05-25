@@ -2,30 +2,35 @@ package app
 
 import (
 	"github.com/yiitz/iceapple/api"
-	"github.com/yiitz/iceapple/ui"
 	"github.com/yiitz/iceapple/entity"
+	"github.com/yiitz/iceapple/ui"
 	"strings"
 )
 
 var songs []ui.PlayListItem
 
-func enterPersonalFM()  {
+func enterPersonalFM() {
 
 	pl.Selectable = false
 
 	pl.SetItems(songs)
 
 	pb.OnSongFinished = func() {
-		songs = songs[1:]
 		playNext()
 	}
 
 	playNextFunc = playNext
 
-	playNext()
+	playCurrent()
 }
 
 func playNext() {
+	songs = songs[1:]
+	playCurrent()
+}
+
+func playCurrent() {
+
 	for len(songs) <= 0 {
 		queryNext()
 	}

@@ -42,6 +42,7 @@ func (pb *PlayBar) Draw(force bool) {
 	state := pb.player.GetState()
 	log.LoggerRoot.Debugf("player state: %d",state)
 
+	finished := false
 	if state == media.GstStatePlaying || force || pb.job != nil {
 		_, _, w, _ := pb.progress.GetInnerRect()
 		w -= 3
@@ -52,9 +53,7 @@ func (pb *PlayBar) Draw(force bool) {
 		if state == media.GstStateNull {
 			pb.CancelTimer()
 			pb.progress.SetText("[" + strings.Repeat("-", w+1) + "]")
-			if pb.OnSongFinished != nil {
-				pb.OnSongFinished()
-			}
+			finished = true
 		} else {
 			pb.progress.SetText(strings.Repeat("=", progress) + ">" + strings.Repeat("-", w-progress))
 		}
@@ -65,6 +64,10 @@ func (pb *PlayBar) Draw(force bool) {
 				int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60, pb.player.GetVolume()))
 
 		pb.app.Draw()
+	}
+
+	if finished && pb.OnSongFinished != nil {
+		pb.OnSongFinished()
 	}
 }
 

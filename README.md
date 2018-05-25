@@ -1,5 +1,13 @@
 # iceapple
 网易云音乐私人FM命令行版本
+
+## 播放器控制
+功能 | 快捷键
+:--- | :---
+播放/暂停 | Space
+音量+ | Ctrl+Up
+音量- | Ctrl+Down
+下一首 | Ctrl+Right
 ## 环境要求
 + glide
 + libgstreamer1.0
