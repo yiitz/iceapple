@@ -55,7 +55,7 @@ func (pb *PlayBar) Draw(force bool) {
 			pb.progress.SetText("[" + strings.Repeat("-", w+1) + "]")
 			finished = true
 		} else {
-			pb.progress.SetText(strings.Repeat("=", progress) + ">" + strings.Repeat("-", w-progress))
+			pb.progress.SetText("[" + strings.Repeat("=", progress) + ">" + strings.Repeat("-", w-progress) + "]")
 		}
 
 		pb.status.SetText(

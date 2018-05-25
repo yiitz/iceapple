@@ -5,6 +5,7 @@ import (
 	"github.com/yiitz/iceapple/entity"
 	"github.com/yiitz/iceapple/ui"
 	"strings"
+	"time"
 )
 
 var songs []ui.PlayListItem
@@ -31,6 +32,9 @@ func playCurrent() {
 
 	for len(songs) <= 0 {
 		queryNext()
+		if len(songs) <= 0 {
+			time.Sleep(time.Second * 3)
+		}
 	}
 
 	s := songs[0]
