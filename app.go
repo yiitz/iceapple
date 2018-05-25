@@ -34,17 +34,19 @@ func main() {
 	fmt.Println("check login state...")
 	for _,ok := api.UserInfo();!ok; {
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("need login, choose method to login.\n1: cellphone\n2: email\nyour choice:")
-		method, _ := reader.ReadString('\n')
-		fmt.Print("account:")
-		u, _ := reader.ReadString('\n')
+		fmt.Println("need login, choose method to login. a:cellphone. b:email. your choice:")
+		method, _, _ := reader.ReadLine()
+		fmt.Print("account name:")
+		u, _, _ := reader.ReadLine()
 		fmt.Print("password:")
 		p, _ := terminal.ReadPassword(int(syscall.Stdin))
-		if "1" == method {
-			api.UserLoginPhone(u, string(p))
+		fmt.Println()
+		if "a" == string(method) {
+			api.UserLoginPhone(string(u), string(p))
 		} else {
-			api.UserLogin(u, string(p))
+			api.UserLogin(string(u), string(p))
 		}
+		_,ok = api.UserInfo()
 	}
 
 	app.Run()

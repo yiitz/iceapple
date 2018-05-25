@@ -13,8 +13,6 @@ func enterPersonalFM() {
 
 	pl.Selectable = false
 
-	pl.SetItems(songs)
-
 	pb.OnSongFinished = func() {
 		playNext()
 	}
