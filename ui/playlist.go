@@ -34,9 +34,12 @@ func NewPlayList(app *tview.Application, list *tview.List, player *media.Player)
 }
 
 func (pl *PlayList) SetItems(items []PlayListItem) {
+	pl.app.Lock()
 	pl.list.Clear()
 	pl.items = items
 	for i, v := range items {
 		pl.list.AddItem(fmt.Sprintf("[%d] %s - %s - %s", i+1, v.GetName(), v.GetArtist(), v.GetAlbum()), "", 0, nil)
 	}
+	pl.app.Unlock()
+	pl.app.Draw()
 }

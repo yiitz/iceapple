@@ -42,6 +42,8 @@ func (pb *PlayBar) Draw(force bool) {
 	state := pb.player.GetState()
 	log.LoggerRoot.Debugf("player state: %d",state)
 
+
+	pb.app.Lock()
 	finished := false
 	if state == media.GstStatePlaying || force || pb.job != nil {
 		_, _, w, _ := pb.progress.GetInnerRect()
@@ -63,8 +65,9 @@ func (pb *PlayBar) Draw(force bool) {
 				int(position.Hours()), int(position.Minutes())%60, int(position.Seconds())%60,
 				int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60, pb.player.GetVolume()))
 
-		pb.app.Draw()
 	}
+	pb.app.Unlock()
+	pb.app.Draw()
 
 	if finished && pb.OnSongFinished != nil {
 		pb.OnSongFinished()
