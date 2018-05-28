@@ -8,6 +8,7 @@
 音量+ | Ctrl+Up
 音量- | Ctrl+Down
 下一首 | Ctrl+Right
+喜欢/取消喜欢 | Ctrl+L
 ## 环境要求
 + glide
 + libgstreamer1.0

@@ -3,12 +3,11 @@ package app
 import (
 	"github.com/yiitz/iceapple/api"
 	"github.com/yiitz/iceapple/entity"
-	"github.com/yiitz/iceapple/ui"
 	"strings"
 	"time"
 )
 
-var songs []ui.PlayListItem
+var songs []*entity.Song
 
 func enterPersonalFM() {
 
@@ -39,7 +38,7 @@ func playCurrent() {
 
 	s := songs[0]
 	pl.SetItems(songs)
-	player.Play(s.GetUri())
+	player.Play(s)
 }
 
 func queryNext() {
@@ -57,6 +56,7 @@ func queryNext() {
 		s.Artist = strings.Join(as, ",")
 		s.Album = (v["album"].(map[string]interface{}))["name"].(string)
 		s.Id = int(v["id"].(float64))
+		s.Starred = v["starred"].(bool)
 		songs = append(songs, s)
 	}
 	return

@@ -9,6 +9,7 @@ import (
 	"github.com/yiitz/iceapple/config"
 	"net/url"
 	"fmt"
+	"github.com/yiitz/iceapple/entity"
 )
 
 /*
@@ -250,6 +251,7 @@ var gid int32 = 0
 
 type Player struct {
 	player      *C.CustomData
+	currentSong *entity.Song
 	id          int32
 	volume      int
 	OnPlayStart func()
@@ -286,7 +288,9 @@ func gFree(s unsafe.Pointer) {
 	C.g_free(C.gpointer(s))
 }
 
-func (p *Player) Play(uri string) {
+func (p *Player) Play(song *entity.Song) {
+	p.currentSong = song
+	uri := song.GetUri()
 	logger.Debugf("play media:%s", uri)
 	s := gString(uri)
 	C.player_play(p.player, s)
@@ -294,6 +298,10 @@ func (p *Player) Play(uri string) {
 	if p.OnPlayStart != nil {
 		p.OnPlayStart()
 	}
+}
+
+func (p *Player) GetCurrentSong() *entity.Song {
+	return p.currentSong
 }
 
 func (p *Player) Pause() {

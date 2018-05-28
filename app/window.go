@@ -6,6 +6,7 @@ import (
 	"github.com/yiitz/iceapple/log"
 	"github.com/yiitz/iceapple/media"
 	"github.com/yiitz/iceapple/ui"
+	"github.com/yiitz/iceapple/api"
 )
 
 var player *media.Player
@@ -34,50 +35,64 @@ func Run() {
 
 	progress := tview.NewTextView()
 	status := tview.NewTextView()
+	status.SetDynamicColors(true)
 	pb = ui.NewPlayBar(app, progress, status, player)
 	flex.AddItem(progress, 1, 0, false)
 	flex.AddItem(status, 1, 0, false)
 
+	finished := true
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		k, r := event.Key(), event.Rune()
 		log.LoggerRoot.Debugf("key event:%d,%d", k, r)
-		if k <= tcell.KeyRune {
+		switch k {
+		case tcell.KeyRune:
 			switch r {
 			case ' ':
 				player.TriggerPlay()
 				return nil
 			}
-		} else {
-			switch k {
-			case 256:
-			case tcell.KeyUp:
-				if event.Modifiers()&tcell.ModCtrl != 0 {
-					player.VolumeUp()
-					pb.Draw(true)
+		case tcell.KeyUp:
+			if event.Modifiers()&tcell.ModCtrl != 0 {
+				player.VolumeUp()
+				pb.Draw(true)
+				return nil
+			}
+		case tcell.KeyDown:
+			if event.Modifiers()&tcell.ModCtrl != 0 {
+				player.VolumeDown()
+				pb.Draw(true)
+				return nil
+			}
+		case tcell.KeyRight:
+			if event.Modifiers()&tcell.ModCtrl != 0 {
+				if playNextFunc != nil {
+					playNextFunc()
 					return nil
-				}
-			case tcell.KeyDown:
-				if event.Modifiers()&tcell.ModCtrl != 0 {
-					player.VolumeDown()
-					pb.Draw(true)
-					return nil
-				}
-			case tcell.KeyRight:
-				if event.Modifiers()&tcell.ModCtrl != 0 {
-					if playNextFunc != nil {
-						playNextFunc()
-						return nil
-					}
-				}
-			case tcell.KeyLeft:
-				if event.Modifiers()&tcell.ModCtrl != 0 {
-					if playPreviousFunc != nil {
-						playPreviousFunc()
-						return nil
-					}
 				}
 			}
+		case tcell.KeyLeft:
+			if event.Modifiers()&tcell.ModCtrl != 0 {
+				if playPreviousFunc != nil {
+					playPreviousFunc()
+					return nil
+				}
+			}
+		case tcell.KeyCtrlL:
+			if !finished {
+				return nil
+			}
+			finished = false
+			go func() {
+				s := player.GetCurrentSong()
+				if api.SongLike(s.Id, !s.Starred) {
+					s.Starred = !s.Starred
+					pb.Draw(true)
+				}
+				finished = true
+			}()
+			return nil
 		}
+
 		return event
 	})
 

@@ -40,8 +40,7 @@ func NewPlayBar(app *tview.Application, progress *tview.TextView, status *tview.
 
 func (pb *PlayBar) Draw(force bool) {
 	state := pb.player.GetState()
-	log.LoggerRoot.Debugf("player state: %d",state)
-
+	log.LoggerRoot.Debugf("player state: %d", state)
 
 	pb.app.Lock()
 	finished := false
@@ -60,10 +59,15 @@ func (pb *PlayBar) Draw(force bool) {
 			pb.progress.SetText("[" + strings.Repeat("=", progress) + ">" + strings.Repeat("-", w-progress) + "]")
 		}
 
+		star := "♡"
+		if pb.player.GetCurrentSong().Starred {
+			star = "[red]♥"
+		}
+
 		pb.status.SetText(
-			fmt.Sprintf("[time %02d:%02d:%02d/%02d:%02d:%02d]\t[volume %d%%]",
+			fmt.Sprintf("[time %02d:%02d:%02d/%02d:%02d:%02d]\t[volume %d%%]\t%s",
 				int(position.Hours()), int(position.Minutes())%60, int(position.Seconds())%60,
-				int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60, pb.player.GetVolume()))
+				int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60, pb.player.GetVolume(), star))
 
 	}
 	pb.app.Unlock()

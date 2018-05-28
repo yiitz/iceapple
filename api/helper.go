@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"io/ioutil"
 	"github.com/yiitz/iceapple/config"
+	"time"
 )
 
 var client http.Client
@@ -32,10 +33,28 @@ const pubKey = "010001"
 const iv = "0102030405060708"
 
 func get(uri string) map[string]interface{} {
-	return decodeResp(client.Get(uri))
+	r := getImpl(uri)
+	for r == nil {
+		time.Sleep(time.Second * 3)
+		r = getImpl(uri)
+	}
+	return r
 }
 
 func post(uri string, data map[string]interface{}) map[string]interface{} {
+	r := postImpl(uri, data)
+	for r == nil {
+		time.Sleep(time.Second * 3)
+		r = postImpl(uri, data)
+	}
+	return r
+}
+
+func getImpl(uri string) map[string]interface{} {
+	return decodeResp(client.Get(uri))
+}
+
+func postImpl(uri string, data map[string]interface{}) map[string]interface{} {
 
 	var text string
 	if data == nil {
@@ -68,6 +87,7 @@ func post(uri string, data map[string]interface{}) map[string]interface{} {
 	logger.Debugf("http request\nuri:%s\nbody:%s,%s", uri, encText, encSecKey)
 
 	return decodeResp(client.Do(req))
+
 }
 
 func decodeResp(resp *http.Response, err error) map[string]interface{} {
