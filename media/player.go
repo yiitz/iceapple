@@ -312,8 +312,8 @@ func (p *Player) Seek(position int64) {
 }
 
 func (p *Player) TriggerPlay() {
-	logger.Debug("trigger play")
 	state := p.GetState()
+	logger.Debugf("trigger play,current state: %d", state)
 	switch state {
 	case GstStatePaused:
 		p.Resume()

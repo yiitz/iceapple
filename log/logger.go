@@ -6,7 +6,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"time"
 	"flag"
-	"github.com/yiitz/iceapple/config"
 )
 
 var LoggerRoot *zap.SugaredLogger
@@ -52,7 +51,7 @@ func init() {
 }
 
 func SetLevel(level string) {
-	logLevel.UnmarshalText([]byte(config.LogLevel))
+	logLevel.UnmarshalText([]byte(level))
 }
 
 func NewLogger(name string) *zap.SugaredLogger {
