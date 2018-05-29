@@ -50,6 +50,14 @@ func Run() {
 			case ' ':
 				player.TriggerPlay()
 				return nil
+			case 'S':
+				player.SeekForward()
+				app.Draw()
+				return nil
+			case 's':
+				player.SeekBack()
+				app.Draw()
+				return nil
 			}
 		case tcell.KeyUp:
 			if event.Modifiers()&tcell.ModCtrl != 0 {

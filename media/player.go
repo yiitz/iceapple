@@ -100,8 +100,7 @@ static void got_location(GstObject *gstobject, GstObject *prop_object, GParamSpe
 	//g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL);
 }
 
-static void cb_playbin_notify_source(GObject *obj, GParamSpec *param, gpointer u_data)
-{
+static void cb_playbin_notify_source(GObject *obj, GParamSpec *param, gpointer u_data) {
 	GObject *source_element;
 	gchar *objname = GST_OBJECT_NAME(obj);
 	snprintf(msgbuf, sizeof(msgbuf), "objname is %s", objname);
@@ -225,11 +224,20 @@ static int player_get_state(CustomData *data){
 	return state;
 }
 
-static void player_seek(CustomData *data, gint64 pos)
-{
-	gst_element_seek (data->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+static void player_seek(CustomData *data, gint64 pos){
+	gst_element_seek (data->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
                          GST_SEEK_TYPE_SET, pos,
-                         GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+                         GST_SEEK_TYPE_NONE, 0);
+}
+
+static void player_seek_delta(CustomData *data, gint64 delta){
+	gint64 position;
+	gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position);
+	if (!gst_element_seek (data->pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+                         GST_SEEK_TYPE_SET, position+delta,
+                         GST_SEEK_TYPE_NONE, 0)){
+                         gst_log_error("seek failed");
+                         }
 }
 
 */
@@ -317,6 +325,14 @@ func (p *Player) Resume() {
 
 func (p *Player) Seek(position int64) {
 	C.player_seek(p.player, C.gint64(position))
+}
+
+func (p *Player) SeekForward()  {
+	C.player_seek_delta(p.player, C.gint64(time.Second*2))
+}
+
+func (p *Player) SeekBack()  {
+	C.player_seek_delta(p.player, C.gint64(-time.Second*2))
 }
 
 func (p *Player) TriggerPlay() {
